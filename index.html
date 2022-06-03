@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PhD Defense</title>
+
+    <meta name="description" content="PhD Defense">
+    <meta name="author" content="Yannik Schaelte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="stylesheet" href="reveal.js/dist/reset.css">
+    <link rel="stylesheet" href="reveal.js/dist/reveal.css">
+    <link rel="stylesheet" href="reveal.js/dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="reveal.js/plugin/highlight/monokai.css" id="highlight-theme">
+
+    <link rel="stylesheet" href="ystyle.css">
+</head>
+
+<!--
+Helmholtz colors:
+Purple #69005F
+Red #FF506E
+-->
+
+<body>
+    <div class="reveal">
+        <div class="slides" id="id_slides">
+
+
+            <section data-background-color="#ffffff">
+                <img src="img/front.svg" alt="Front page" class="r-stretch" />
+            </section>
+
+
+            <section>
+                <div class="r-stack" id="id_intro_div" style="padding: 0px; margin: 0px;">
+                    <script>
+                        var node = document.getElementById("id_intro_div");
+                        node.innerHTML += "<img src='img/intro90.svg'/>"
+                        var i;
+                        for (i = 91; i <= 100; i++) {
+                            node.innerHTML += "<img src='img/intro" + i + ".svg' class='fragment'/>"
+                        }  
+                    </script>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Contributions</h2>
+                <div style="border-style: solid; border-width: 1px; text-align: left;">
+                    Efficient and accurate large-scale ODE inference
+                    <div>
+                        <ol style="font-size: 14pt" start="1">
+                            <li>Schmiester, L.$^∗$, <font style="font-weight: bold">Schälte, Y.$^∗$</font>, Fröhlich,
+                                F.,
+                                Hasenauer, J. and Weindl, D. (2019).
+                                Efficient parameterization of large-scale dynamic models based on relative measurements.
+                                Bioinformatics, 36(2), pp.594-602.</li>
+                        </ol>
+                    </div>
+                    <br />
+                    Efficient exact ABC with noise
+                    <div>
+                        <ol style="font-size: 14pt" start="2">
+                            <li>
+                                <font style="font-weight: bold">Schälte, Y.</font> and Hasenauer, J. (2020).
+                                Efficient exact inference for dynamical systems with noisy measurements using sequential
+                                approximate Bayesian computation.
+                                Bioinformatics, 36(Supplement 1), pp.i551-i559.
+                            </li>
+                        </ol>
+                    </div>
+                    <br />
+                    Robust and efficient ABC via inverse ML models
+                    <div>
+                        <ol style="font-size: 14pt" start="3">
+                            <li>
+                                <font style="font-weight: bold">Schälte, Y.</font>, Alamoudi, E. and Hasenauer, J.
+                                (2021).
+                                Robust adaptive distance functions for approximate Bayesian inference on
+                                outlier-corrupted data.
+                                bioRxiv.
+                            </li>
+                            <li>
+                                <font style="font-weight: bold">Schälte, Y.</font> and Hasenauer, J. (2022).
+                                Informative and adaptive distances and summary statistics in approximate Bayesian
+                                computation.
+                                bioRxiv.
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <br />
+                <ol style="font-size: 14pt" start="5">
+                    <li>
+                        <font style="font-weight: bold">Schälte, Y.</font>, Stapor, P. and Hasenauer, J. (2018).
+                        Evaluation of derivative-free optimizers for parameter estimation in systems biology.
+                        IFAC-PapersOnLine, 51(19), pp.98-101.
+                    </li>
+                    <li>Schmiester, L.$^∗$, <font style="font-weight: bold">Schälte, Y.$^∗$</font>, et al. (2021).
+                        PEtab — Interoperable specification of parameter estimation problems in systems biology. PLoS
+                        computational biology, 17(1), p.e1008646.</li>
+                    <li>Städter, P.$^∗$, <font style="font-weight: bold">Schälte, Y.$^∗$</font>, Schmiester, L.$^∗$,
+                        Hasenauer, J. and Stapor, P. (2021).
+                        Benchmarking of numerical integration methods for ODE models of biological systems. Scientific
+                        reports, 11(1), pp.1-11.</li>
+                    <li>Fröhlich, F., Weindl, D., <font style="font-weight: bold">Schälte, Y.</font>, Pathirana, D.,
+                        Paszkowski, Ł., Lines, G.T., Stapor,
+                        P. and Hasenauer, J. (2021).
+                        AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models.
+                        Bioinformatics, p.btab227.</li>
+                </ol>
+            </section>
+
+
+
+            <section data-background="#ef405e" data-background-transition="zoom">
+                <h1>Adjoint-hierarchical optimization for large-scale ODE models</h1>
+            </section>
+
+
+            <section>
+                <div class="r-stack">
+                    <div style="text-align: left; display: flex;">
+                        <div>
+                            <div>
+                                <h2>ODE model</h2>
+                                <ul>
+                                    <li>Model: $\dot x = f(x, \theta)$, $x(t_0,\theta) = x_0(\theta)$</li>
+                                    <li>Observables: $y = h(x, \theta)$, noise model e.g.: $\bar y = y +
+                                        \mathcal{N}(0,\sigma^2)$</li>
+                                    <li>Objective: $J(\theta) := - \log\pi(\bar y_\text{obs}|\theta)
+                                        \overset{!}{\rightarrow}\min_\theta$
+                                </ul>
+                                <br /><br /><br /><br />
+                            </div>
+                            <div class="fragment" data-fragment-index="1">
+                                <h2>We want large-scale models ...</h2>
+                                <ul>
+                                    <li><b>holistic</b> view on complex reaction networks</li>
+                                    <li>with 1000s of state variables and parameters</li>
+                                </ul><br />
+                                <ul style="list-style-type: '➝ ';">
+                                    <li>need <b>scalable methods</b></li>
+                                </ul>
+                                <br /><br />
+                            </div>
+                            <div class="fragment" data-fragment-index="2">
+                                <h2>... but have relative data</h2>
+                                <ul>
+                                    <li>$\bar y = s \cdot \tilde y + b + \mathcal{N}(0,\sigma^2)$<br /> with <b>unscaled
+                                            observables</b> $\tilde y$ and <b>unknown noise levels</b> $\sigma$</li>
+                                </ul>
+                                <ul style="list-style-type: '➝ ';">
+                                    <li>gives <b>additional parameters</b></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <span style="padding: 10px;">
+                            <div class="r-stack">
+                                <img src="img_hier/relative_large1.svg" width="250px"
+                                    style="background-color: #ffffff;" />
+                                <img class="fragment" data-fragment-index="1" src="img_hier/relative_large2.svg"
+                                    width="250px" style="background-color: #ffffff;" />
+                                <img class="fragment" data-fragment-index="2" src="img_hier/relative_large3.svg"
+                                    width="250px" style="background-color: #ffffff;" />
+                            </div>
+                        </span>
+                    </div>
+
+                    <div class="fragment"
+                        style="background-color: #fffffff6; padding: 10pt; border-style: solid; border-width: 4px; border-color: #121212">
+                        How to efficiently parameterize large-scale ODE models with relative data?
+                    </div>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Hierarchical optimization</h2>
+                <div class="r-stack">
+                    <img src="img_hier/hier0.svg" style="background-color: #ffffff" />
+                    <img src="img_hier/hier1.svg" class="fragment" style="background-color: #ffffffff" />
+                    <img src="img_hier/hier2.svg" class="fragment" style="background-color: #ffffffff" />
+                    <div>
+                        <div class="fragment"
+                            style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e; text-align: left;">
+                            <ul style="list-style-type: '✓ ';">
+                                <li>Very efficient inner problem</li>
+                                <li>Simplified outer problem</li>
+                        </div>
+                        <div class="fragment"
+                            style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #121212; text-align: left;">
+                            How to calculate $\nabla_\psi J(\psi,\hat\eta(\psi))$?
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>How to calculate gradients?</h2>
+                <div style="text-align: left;">
+                    <div class="fragment">
+                        <ul>
+                            <li>
+                                <span style="font-size: 12pt">
+                                    $\nabla_\psi J(\psi,\hat\eta(\psi)) \approx
+                                    \frac{1}{2}\sum_i\left[\frac{1}{\hat\sigma_i^{2}}\color{blue}{\frac{d\hat\sigma^2_i}{d\psi}}
+                                    - \frac{2(\bar y_{\text{obs},i} - (s_i\tilde y_i + b_i))(\hat
+                                    s_i\color{red}{\tfrac{d\tilde
+                                    y_i}{d\psi}} + \color{blue}{\tfrac{d\hat s_i}{d\psi}}\tilde y_i +
+                                    \color{blue}{\tfrac{d\hat
+                                    b_i}{d\psi}})}{(\hat\sigma^2_i)^2} - \frac{(\bar y_{\text{obs},i} - (\hat s_i\tilde
+                                    y_i
+                                    +
+                                    \hat
+                                    b_i))^2\color{blue}{\tfrac{d\hat\sigma_i^2}{d\psi}}}{(\hat\sigma^2_i)^2}\right]$
+                                </span>
+                                <br />
+                                with colored terms depending on $\color{red}{\frac{d x}{d\psi}}$ with $\dot x = f(x,
+                                \psi)$
+                            </li>
+                        </ul>
+                    </div>
+                    <br />
+                    <div class="fragment">
+                        ODE gradient calculation methods:
+                        <li>forward: differentiate $\dot x = f$ to calculate $\tfrac{dx}{d\psi}$ $\rightsquigarrow$
+                            $O(n_\psi \cdot n_x)$
+                        </li>
+                        <li class="fragment">adjoint: introduce an adjoint state $\dot p = - \tfrac{\partial f}{\partial
+                            x}^Tp$ to avoid $\tfrac{dx}{d\psi}$
+                            altogether $\rightsquigarrow$ $O(2\cdot n_x)$</li>
+                        </ul>
+                    </div>
+                    <br />
+                    <div class="fragment">
+                        <b>Can we use adjoints with hierarchical optimization?</b>
+                        <ul>
+                            <li class="fragment">actually, we calculate
+                                $\nabla_\psi J(\psi,\hat\eta(\psi)) = \frac{\partial J}{\partial\psi} + \frac{\partial
+                                J}{\partial\eta}\frac{d\hat\eta}{d\psi} = \frac{\partial J}{\partial\psi}$,
+                                as $\frac{\partial J}{\partial\eta} = 0$
+                            </li>
+                        </ul>
+                    </div>
+                    <br />
+                    <div class="fragment"
+                        style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e">
+                        <ul style="list-style-type: '✓ ';">
+                            <li>thus: can <b>treat $\eta$ as constant</b> in gradient calculation, especially enabling
+                                adjoints
+                            </li>
+                            <li><b>easy to integrate</b> in existing simulation tools</li>
+                            <!--<img src="img_hier/alg_illustration4_v3.svg" class="r-stretch"/>-->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Application</h2>
+                <div class="r-stack">
+                    <div>
+                        <div
+                            style="text-align: left; display: flex; align-items: flex-start; justify-content: flex-start;">
+                            <img src="img_hier/froehlich_model.svg" width="100px" style="margin-right: 30px;" />
+                            <ul>
+                                <li>pan-cancer signaling pathway model</li>
+                                <li>$\approx 1400$ species, $\approx 4000$ parameters</li>
+                                <li>observable parameters: up to $\#s=96$, $\#b = 48$, $\#\sigma = 49$</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img src="img_hier/optimizer_comparison_with_speedup_small.svg" width="800px" />
+                            <div style="align: right; text-align: right; font-size: 10pt;">
+                                from: Schmiester$^*$, Schälte$^*$ et al., Bioinformatics 2020
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fragment"
+                        style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e">
+                        <ul style="list-style-type: '✓ ';">
+                            <li>adjoint-hierarchical approach <b>facilitates</b> optimization for <b>large-scale</b>
+                                models with</li>
+                            <b>relative</b> data
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+
+            <section data-background="#ef405e" data-background-transition="zoom">
+                <h1>Efficient exact ABC with noise</h1>
+            </section>
+
+
+            <section data-transition="slide-in fade-out">
+                <h2>ABC</h2>
+                likelihood-free approximate Bayesian computation
+                <br /><br />
+                <div class="r-stack" id="id_abc">
+                    <img src="img_exact/no_likelihood.svg" width="400px" />
+                    <script>
+                        var node = document.getElementById("id_abc");
+                        node.innerHTML += "<img class='fragment' src='img/abc_principles-0.svg' style='background-color: #ffffff;'/>"
+                        var i;
+                        for (i = 1; i < 8; i++) {
+                            node.innerHTML += "<img class='fragment' src='img/abc_principles-" + i + ".svg' style='background-color: #ffffff;'/>"
+                        }
+                    </script>
+                </div>
+                <div class="fragment">
+                    <ul>
+                        conflicting goals:
+                        <li>reduce approximation error $\varepsilon$</li>
+                        <li>keep high acceptance rates</li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section data-transition="fade-in slide-out">
+                <h2>ABC-SMC</h2>
+                combine with a sequential Monte-Carlo scheme
+                <div class="r-stack">
+                    <img src='img/abc_principles-8.svg' style='background-color: #ffffff;' />
+                    <img class='fragment' src='img/abc_principles-9.svg' style='background-color: #ffffff;' />
+                </div>
+                <small>similar to Toni et al., JRS 2009</small>
+            </section>
+
+
+
+            <section>
+                <div class="r-stack">
+                    <img src="img_exact/nonoise_papers.svg" />
+                    <div>
+                        <h2>The problem: (biological) data are noisy</h2>
+                        <img src="img_exact/abc_jackson.png" width="300px" />
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div>
+                    <h2>What happens when ignoring noise in ABC?</h2>
+                    <div>
+                        <p>Assume: Model $y\sim \pi(y|\theta)$ does not
+                            account for noise.</p>
+                        <p>But: Measurements are noisy, $\bar y_\text{obs} \sim \pi(\bar
+                            y|y,\theta)$.
+                        </p>
+                    </div>
+                    <br />
+
+                    <img src="img_exact/motivation_data.svg" class="r-stretch" />
+                </div>
+            </section>
+
+
+            <section>
+                <h2>How to account for noise?</h2>
+                <div class="r-stack">
+                    <div>
+                        <div class="r-stack">
+                            <img src="img_exact/concept.svg" />
+                            <img class="fragment" data-fragment-index="1" src="img_exact/concept2.svg"
+                                style="background-color: #ffffff" />
+                            <img class="fragment" data-fragment-index="2" src="img_exact/concept3.svg"
+                                alt="3-way noise assessment concept" style="background-color: #ffffff" />
+                        </div>
+                        <blockquote class="fragment" data-fragment-index="2">
+                            &ldquo;ABC gives exact inference for the wrong model&rdquo;
+                            <br /><small>Richard Wilkinson, Stat. App. Gen. Mol. Bio. 2013</small>
+                        </blockquote>
+                    </div>
+                    <div class="fragment" data-fragment-index="3"
+                        style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e">
+                        <ul style="list-style-type: '✓ ';">
+                            <li>noise model permits <b>exact</b> likelihood-free inference</li>
+                            <li>applicable to any <b>stochastic model</b> and <b>noise model</b></li>
+                            <li><b>parameterized</b> noise model</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Problem: Existing methods do not scale in practice</h2>
+                <img src="img_exact/cr_datapoint_scaling_predicted_talk.svg" />
+                <img src="img_exact/cr_datapoint_scaling_ours_talk.svg" class="fragment" />
+            </section>
+
+
+            <section>
+                <div style="text-align: left; display: flex;">
+                    <div>
+                        <h2>Can we make it more efficient?</h2>
+                        <ul>
+                            <li class="fragment" data-fragment-index="1">
+                                How to <em>propose parameters</em>?
+                                <br />
+                                $\rightsquigarrow$ integrate in <b>SMC</b> via <b>tempering</b>, $\pi(\bar
+                                y_\text{obs}|y,\theta)^{\color{red}{1/T_t}}$.
+                            </li>
+                            <br /><br />
+                            <li class="fragment" data-fragment-index="2">
+                                How to choose the <em>normalization $c$</em>?
+                                <br />
+                                $\rightsquigarrow$ based on <b>previous samples</b>, and avoid decapitation via
+                                <b>reweighting</b>
+                                $\tilde w :=
+                                \color{red}{\frac{\left(\frac{\pi(\bar
+                                y_\text{obs}|y,\theta)}{c_t}\right)^{1/T_t}}{\min\left[\frac{\pi(\bar
+                                y_\text{obs}|y,\theta)}{c_t},1\right]^{1/T_t}}}\cdot\frac{\pi(\theta)}{g_t(\theta)}$
+                            </li>
+                            <br /><br />
+                            <li class="fragment" data-fragment-index="3">
+                                How to choose the <em>temperatures $T_t$, $t=1,\ldots,n_t$</em>?
+                                <br />
+                                $\rightsquigarrow$ <b>predict the acceptance rate</b>
+                                $\gamma = \int\left(\int\min\left[\left(\frac{\pi(\bar y_\text{obs}
+                                |y,\theta)}{c_{t}}\right)^{1/T},1\right]\pi(y|\theta)\mathop{dy}\right)g_{t}(\theta)\mathop{d\theta}$
+                                <!--$\gamma_T \approx \frac 1 N \sum_{i=1}^N
+                            v_t(\theta_i^{(t-1)}) \min\left[\left(\frac{\pi(y_\text{obs} |
+                            y_i^{(t-1)},\theta_i^{(t-1)})}{c_t}\right)^{1/T},1\right]$-->
+                                <br />
+                                (esp. allows choosing $T_1$)
+                            </li>
+                        </ul>
+                    </div>
+
+                    <span style="padding: 10px;">
+                        <div class="r-stack">
+                            <img class="fragment" data-fragment-index="1" src="img_exact/alg98.svg" width="700px"
+                                style="background-color: #ffffff;" />
+                            <img class="fragment" data-fragment-index="2" src="img_exact/alg99.svg" width="700px"
+                                style="background-color: #ffffff;" />
+                            <img class="fragment" data-fragment-index="3" src="img_exact/alg100.svg" width="700px"
+                                style="background-color: #ffffff;" />
+                        </div>
+                    </span>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Evaluation</h2>
+                <img src="img_exact/results.svg" class="r-stretch" />
+                <div
+                    style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e; text-align: left;">
+                    <ul style="list-style-type: '✓ ';">
+                        <li>Applicable to <b>various model</b> and <b>noise model</b> types</li>
+                        <li>orders of magnitude <b>speed-up</b></li>
+                        <li><b>scales</b> to challenging application problems</li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section data-background="#ef405e" data-background-transition="zoom">
+                <h1>Robust and efficient ABC via inverse machine learning models</h1>
+            </section>
+
+
+            <section>
+                <h3>The problem:</h3>
+                <h2>Fitting heterogeneous data</h2>
+                <img src="img_robust/dist_sumstat_problem_illustration.svg" class="r-stretch" />
+            </section>
+
+
+            <section>
+                <h2>How to account for data informativeness?</h2>
+                <div class="r-stack">
+                    <img src="img_info/concept0.svg" class="" height="300px" />
+                    <img src="img_info/concept.svg" class="fragment" style="background-color: #ffffff;"
+                        height="300px" />
+                </div>
+                <br />
+                <div style="text-align: left;">
+                    <ul>
+                        <li class="fragment">construct low-dimensional <b>summary statistics</b> (see Fearnhead &
+                            Prangle, JRSS 2012)
+                        </li>
+                        <br />
+                        <li class="fragment">or: define <b>sensitivity weights</b> via the sensitivity matrix
+                            $S = \nabla_{\bar y} s(\bar y_\text{obs})$,
+                            $q_{i_y} = \sum_{i_\theta=1}^{n_\theta} \frac{\left|S_{i_yi_\theta}\right|}{
+                            \sum_{j_y=1}^{n_y}\left|S_{j_yi_\theta}\right|}$
+                        </li>
+                        <li class="fragment"><b>combine</b> with scale normalization and outlier correction via
+                            <b>adaptive weighting</b> in an <b>SMC</b> framework
+                        </li>
+                        <li class="fragment">learn functions of parameters $\lambda(\theta)$ to capture <b>higher-order
+                                moments</b></li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Evaluation: Simple test model</h2>
+                <img src="img_info/figure_demo_all.svg" class="r-stretch" />
+                <div
+                    style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e; text-align: left;">
+                    <ul style="list-style-type: '✓ ';">
+                        <li>only <b>combination</b> of <em>scale normalization</em>, <em>informativeness
+                                assessment</em>, and <em>regression target augmentation</em> permits accurate inference
+                        </li>
+                        <li>sensitivity weights give further <b>insights</b></li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Evaluation: Agent-based tumor spheroid model <img src="img_info/dividing_bg_transparent_small.gif"
+                        width="100px" /></h2>
+                <img src="img_info/figure_tumor_fits_and_weights_0.1.svg" class="r-stretch" />
+                <div
+                    style="background-color: #ffffffee; padding: 10pt; border-style: solid; border-width: 4px; border-color: #ef405e; text-align: left;">
+                    <ul style="list-style-type: '✓ ';">
+                        <li>can via sensitivity weighting in <b>complex application</b> simultaneously account for
+                            <b>informativeness</b> and <b>outliers</b>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section data-background="#ef405e" data-background-transition="zoom" data-auto-animate>
+                <h1>Summary</h1>
+            </section>
+
+
+            <section data-auto-animate>
+                <h1>Summary</h1>
+                <img src="img/intro_small.svg" width="400px" />
+                <br />
+                <div style="text-align: left">
+                    <ul style="list-style-type: '✓ ';">
+                        <li><b>exploited the problem structure</b> to facilitate inference for large models with
+                            relative data</li>
+                        <li><b>handled noise</b> accurately and efficiently</li>
+                        <li><b>combined modeling and machine learning</b> to focus on informative data by learning
+                            underlying relationships</li>
+                        <br />
+                        <li>substantially improved inference capabilities, overcome limitations, facilitate new
+                            applications
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>Contributions</h2>
+                <div style="border-style: solid; border-width: 1px; text-align: left;">
+                    Efficient and accurate large-scale ODE inference
+                    <div>
+                        <ol style="font-size: 14pt" start="1">
+                            <li>Schmiester, L.$^∗$, <font style="font-weight: bold">Schälte, Y.$^∗$</font>, Fröhlich,
+                                F.,
+                                Hasenauer, J. and Weindl, D. (2019).
+                                Efficient parameterization of large-scale dynamic models based on relative measurements.
+                                Bioinformatics, 36(2), pp.594-602.</li>
+                        </ol>
+                    </div>
+                    <br />
+                    Efficient exact ABC with noise
+                    <div>
+                        <ol style="font-size: 14pt" start="2">
+                            <li>
+                                <font style="font-weight: bold">Schälte, Y.</font> and Hasenauer, J. (2020).
+                                Efficient exact inference for dynamical systems with noisy measurements using sequential
+                                approximate Bayesian computation.
+                                Bioinformatics, 36(Supplement 1), pp.i551-i559.
+                            </li>
+                        </ol>
+                    </div>
+                    <br />
+                    Robust and efficient ABC via inverse ML models
+                    <div>
+                        <ol style="font-size: 14pt" start="3">
+                            <li>
+                                <font style="font-weight: bold">Schälte, Y.</font>, Alamoudi, E. and Hasenauer, J.
+                                (2021).
+                                Robust adaptive distance functions for approximate Bayesian inference on
+                                outlier-corrupted data.
+                                bioRxiv.
+                            </li>
+                            <li>
+                                <font style="font-weight: bold">Schälte, Y.</font> and Hasenauer, J. (2022).
+                                Informative and adaptive distances and summary statistics in approximate Bayesian
+                                computation.
+                                bioRxiv.
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <br />
+                <ol style="font-size: 14pt" start="5">
+                    <li>
+                        <font style="font-weight: bold">Schälte, Y.</font>, Stapor, P. and Hasenauer, J. (2018).
+                        Evaluation of derivative-free optimizers for parameter estimation in systems biology.
+                        IFAC-PapersOnLine, 51(19), pp.98-101.
+                    </li>
+                    <li>Schmiester, L.$^∗$, <font style="font-weight: bold">Schälte, Y.$^∗$</font>, et al. (2021).
+                        PEtab — Interoperable specification of parameter estimation problems in systems biology. PLoS
+                        computational biology, 17(1), p.e1008646.</li>
+                    <li>Städter, P.$^∗$, <font style="font-weight: bold">Schälte, Y.$^∗$</font>, Schmiester, L.$^∗$,
+                        Hasenauer, J. and Stapor, P. (2021).
+                        Benchmarking of numerical integration methods for ODE models of biological systems. Scientific
+                        reports, 11(1), pp.1-11.</li>
+                    <li>Fröhlich, F., Weindl, D., <font style="font-weight: bold">Schälte, Y.</font>, Pathirana, D.,
+                        Paszkowski, Ł., Lines, G.T., Stapor,
+                        P. and Hasenauer, J. (2021).
+                        AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models.
+                        Bioinformatics, p.btab227.</li>
+                </ol>
+            </section>
+
+
+            <section>
+                <h2>Further contributions</h2>
+                <ol style="font-size: 14pt" start="9">
+                    <li>
+                        <font style="font-weight: bold">Schälte, Y.</font>, Klinger, E., Alamoudi, E., and Hasenauer, J.
+                        (2022).
+                        pyABC: Efficient and robust easy-to-use approximate Bayesian computation. arXiv preprint
+                        arXiv:2203.13043.
+                    </li>
+                    <li>Alamoudi, E., Starruß, J., Bundgaard, N., Müller, R., Reck, F., Graw, F., Brusch, L., Hasenauer,
+                        J. and <font style="font-weight: bold">Schälte, Y.</font> (2022).
+                        Massively parallel likelihood-free parameter inference for biological multi-scale systems. NIC
+                        Symposium Proceedings (in submission)</li>
+                    <li>Olbrich, L.$^∗$, Castelletti, N.$^∗$, <font style="font-weight: bold">Schälte, Y.$^*$</font>,
+                        Garí, M.$^∗$, et al. (2021).
+                        A Serology Strategy for Epidemiological Studies Based on the Comparison of the Performance of
+                        Seven
+                        Different Test Systems-The Representative COVID-19 Cohort Munich. medRxiv.</li>
+                    <li>Olbrich, L.$^*$, Castelletti, N.$^*$, <font style="font-weight: bold">Schälte, Y.$^*$</font>,
+                        Garí, M.$^*$, et al. (2021).
+                        Head-to-head evaluation of seven different seroassays including direct viral neutralisation in a
+                        representative cohort for SARS-CoV-2.
+                        The Journal of general virology, 102(10).</li>
+                    <li>Pritsch, M., ..., <font style="font-weight: bold">Schälte, Y.</font>, et al. (2021).
+                        Prevalence and risk factors of infection in the
+                        representative COVID-19 cohort Munich. International journal of environmental research
+                        and public health, 18(7), p.3572.</li>
+                    <li>Radon, K., ..., <font style="font-weight: bold">Schälte, Y.</font>, et al. (2021).
+                        From first to second wave: follow-up of the prospective Covid-19 cohort (KoCo19) in
+                        Munich (Germany). medRxiv.</li>
+                    <li>Syga, S., David-Rus, D., <font style="font-weight: bold">Schälte, Y.</font>, Hatzikirou, H., and
+                        Deutsch, A. (2021).
+                        Inferring the effect of interventions on COVID-19 transmission networks. Scientific reports,
+                        11(1), 1-11.</li>
+                    <li>Durso-Cain, K., Kumberger, P., <font style="font-weight: bold">Schälte, Y.</font>, Fink, T.,
+                        Dahari, H., Hasenauer, J., and Graw, F. (2021).
+                        HCV spread kinetics reveal varying contributions of transmission modes to infection dynamics.
+                        Viruses, 13(7), 1308.</li>
+                    <li>Vanhoefer, J., Marta, R., Pathirana, D., <font style="font-weight: bold">Schälte, Y.</font> and
+                        Hasenauer, J. (2021). yaml2sbml:
+                        Human-readable and-writable specification of ODE models and their conversion to SBML.
+                        Journal of Open Source Software, 6(61), p.3215.</li>
+                    <li>Contento, L., Castelletti, N., Raimúndez, E., Le Gleut, R., <font style="font-weight: bold">
+                            Schälte, Y.</font>, et al. (2021).
+                        Integrative modelling of reported case numbers and seroprevalence reveals time-dependent test
+                        efficiency and infection rates. medRxiv.</li>
+                </ol>
+            </section>
+
+
+            <section>
+                <h2>Software</h2>
+                <img src="img/tools.svg" class="r-stretch" />
+            </section>
+
+
+            <section data-background="img/group.jpg">
+                <div style="background-color: #ffffff99; text-align: left; padding: 30px;">
+                    <h3>Acknowledgments</h3>
+                    I want to thank:
+                    <ul>
+                        <li>Jan Hasenauer</li>
+                        <li>Barbara Kaltenbacher, Elisabeth Ullmann, Michael Stumpf</li>
+                        <li>my colleagues at ICB and Bonn University</li>
+                        <li>my co-authors, co-developers, and collaboration partners</li>
+                        <li>the administrative staff</li>
+                        <li>everyone I forgot here ... :)</li>
+                        <li>you</li>
+                        <img src="img/ack.png" />
+                </div>
+            </section>
+        </div>
+    </div>
+
+
+    <script src="reveal.js/dist/reveal.js"></script>
+    <script src="reveal.js/plugin/zoom/zoom.js"></script>
+    <script src="reveal.js/plugin/notes/notes.js"></script>
+    <script src="reveal.js/plugin/search/search.js"></script>
+    <script src="reveal.js/plugin/markdown/markdown.js"></script>
+    <script src="reveal.js/plugin/highlight/highlight.js"></script>
+    <script src="reveal.js/plugin/math/math.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            center: true,
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes,
+                RevealMath, RevealZoom]
+        });
+        Reveal.configure({ slideNumber: 'c/t' });
+        Reveal.configure({ showSlideNumber: 'all' });
+    </script>
+
+</body>
+
+</html>
